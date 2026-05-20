@@ -1,0 +1,450 @@
+/* Typer — Dark Theme */
+
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --bg-hover: #1a3a6e;
+  --text-primary: #e8e8e8;
+  --text-secondary: #a0a0b0;
+  --text-dim: #606070;
+  --accent: #e94560;
+  --accent-glow: rgba(233, 69, 96, 0.3);
+  --correct: #4ade80;
+  --incorrect: #ef4444;
+  --warning: #f59e0b;
+  --border: rgba(255, 255, 255, 0.08);
+  --radius: 8px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons */
+.btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.btn-danger {
+  background: var(--incorrect);
+  border-color: var(--incorrect);
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-icon {
+  padding: 8px 12px;
+  font-size: 16px;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.btn-close:hover {
+  color: var(--text-primary);
+}
+
+/* Stats Bar */
+.stats-bar {
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Practice Area */
+.practice-area {
+  position: relative;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  min-height: 120px;
+  border: 1px solid var(--border);
+}
+
+.text-display {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1.8;
+  letter-spacing: 1px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.text-display .char {
+  position: relative;
+  transition: color 0.1s ease;
+}
+
+.text-display .char.correct {
+  color: var(--correct);
+}
+
+.text-display .char.incorrect {
+  color: var(--incorrect);
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 2px;
+}
+
+.text-display .char.current {
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--accent);
+  animation: blink 1s ease-in-out infinite;
+}
+
+.text-display .char.pending {
+  color: var(--text-dim);
+}
+
+@keyframes blink {
+  0%, 100% { border-bottom-color: var(--accent); }
+  50% { border-bottom-color: transparent; }
+}
+
+/* Sprint Notification */
+.sprint-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  animation: slideIn 0.3s ease;
+}
+
+.sprint-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.sprint-card h3 {
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.sprint-stats {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Keyboard Heatmap */
+.keyboard-container {
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 3px;
+}
+
+.key {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  transition: all 0.15s ease;
+  position: relative;
+  user-select: none;
+}
+
+.key .key-label {
+  color: var(--text-primary);
+  z-index: 1;
+}
+
+.key .key-heat {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.key.active .key-heat {
+  opacity: 1;
+}
+
+.key.space {
+  width: 200px;
+}
+
+.key.home {
+  border-bottom: 2px solid var(--text-dim);
+}
+
+.key.mastered {
+  border-color: var(--correct);
+}
+
+/* Heatmap colors — from cool (low) to warm (high) */
+.heat-0 { background: transparent; }
+.heat-1 { background: rgba(59, 130, 246, 0.15); }
+.heat-2 { background: rgba(59, 130, 246, 0.3); }
+.heat-3 { background: rgba(16, 185, 129, 0.3); }
+.heat-4 { background: rgba(16, 185, 129, 0.5); }
+.heat-5 { background: rgba(245, 158, 11, 0.4); }
+.heat-6 { background: rgba(245, 158, 11, 0.6); }
+.heat-7 { background: rgba(239, 68, 68, 0.4); }
+.heat-8 { background: rgba(239, 68, 68, 0.6); }
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-wide {
+  width: 600px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Settings */
+.setting-group {
+  margin-bottom: 16px;
+}
+
+.setting-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.setting-group input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-mono);
+}
+
+.setting-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Stats Table */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stats-table th {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.stats-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
+
+.stats-table tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stats-summary .stat-card {
+  background: var(--bg-primary);
+  padding: 12px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.stats-summary .stat-card .value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
+.stats-summary .stat-card .label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-hover);
+}

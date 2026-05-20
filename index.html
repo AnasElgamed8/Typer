@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typer</title>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <h1>⌨ Typer</h1>
+      <div class="header-actions">
+        <button id="newLessonBtn" class="btn">New Lesson</button>
+        <button id="statsBtn" class="btn">Stats</button>
+        <button id="settingsBtn" class="btn btn-icon">⚙</button>
+      </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="wpmValue">0</span>
+        <span class="stat-label">WPM</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="accuracyValue">100%</span>
+        <span class="stat-label">Accuracy</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="sprintValue">0</span>
+        <span class="stat-label">Sprints</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="activeKeysValue">6</span>
+        <span class="stat-label">Active Keys</span>
+      </div>
+    </div>
+
+    <!-- Practice Area -->
+    <div class="practice-area">
+      <div class="text-display" id="textDisplay">
+        Press "New Lesson" to start
+      </div>
+      <div class="cursor-indicator" id="cursorIndicator"></div>
+    </div>
+
+    <!-- Sprint Notification -->
+    <div class="sprint-notification" id="sprintNotification" style="display:none;">
+      <div class="sprint-card">
+        <h3>Sprint Complete!</h3>
+        <div class="sprint-stats">
+          <span id="sprintWpm">0 WPM</span>
+          <span id="sprintAccuracy">100%</span>
+          <span id="sprintHits">0 hits</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard Heatmap -->
+    <div class="keyboard-container">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" style="display:none;">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button class="btn-close" id="closeSettingsBtn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-group">
+            <label>Idle Timeout (seconds)</label>
+            <input type="number" id="idleTimeoutInput" value="3" min="1" max="30" step="0.5">
+          </div>
+          <div class="setting-group">
+            <label>Target WPM</label>
+            <input type="number" id="targetWpmInput" value="40" min="10" max="200" step="5">
+          </div>
+          <div class="setting-group">
+            <label>Words per Lesson</label>
+            <input type="number" id="wordCountInput" value="15" min="5" max="100" step="5">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" id="saveSettingsBtn">Save</button>
+          <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal-overlay" id="statsModal" style="display:none;">
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h2>Statistics</h2>
+          <button class="btn-close" id="closeStatsBtn">×</button>
+        </div>
+        <div class="modal-body" id="statsContent">
+          Loading...
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="resetStatsBtn">Reset All</button>
+          <button class="btn" id="closeStatsBtn2">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

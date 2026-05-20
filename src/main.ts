@@ -1,0 +1,455 @@
+const { invoke } = window.__TAURI__.core;
+
+// ============================================================
+// Types
+// ============================================================
+
+interface KeypressResult {
+  correct: boolean;
+  position: number;
+  wpm: number;
+  accuracy: number;
+  completed_sprint: SprintInfo | null;
+  heatmap: Record<string, number>;
+  confidence: Record<string, number>;
+}
+
+interface SprintInfo {
+  wpm: number;
+  accuracy: number;
+  hits: number;
+  misses: number;
+  duration_ms: number;
+}
+
+interface StatsResponse {
+  total_hits: number;
+  total_misses: number;
+  accuracy: number;
+  avg_wpm: number;
+  sprint_count: number;
+  active_keys: string[];
+  mastered_keys: string[];
+  key_details: KeyDetail[];
+}
+
+interface KeyDetail {
+  character: string;
+  hit_count: number;
+  miss_count: number;
+  avg_latency_ms: number;
+  recent_avg_latency_ms: number;
+  best_latency_ms: number;
+  confidence: number;
+}
+
+// ============================================================
+// State
+// ============================================================
+
+let currentText = "";
+let currentPosition = 0;
+let isTyping = false;
+let lastTimestamp = 0;
+
+// ============================================================
+// DOM Elements
+// ============================================================
+
+const textDisplay = document.getElementById("textDisplay")!;
+const wpmValue = document.getElementById("wpmValue")!;
+const accuracyValue = document.getElementById("accuracyValue")!;
+const sprintValue = document.getElementById("sprintValue")!;
+const activeKeysValue = document.getElementById("activeKeysValue")!;
+const keyboard = document.getElementById("keyboard")!;
+const sprintNotification = document.getElementById("sprintNotification")!;
+
+// ============================================================
+// Keyboard Layout Definition
+// ============================================================
+
+interface KeyDef {
+  label: string;
+  width?: number;
+  home?: boolean;
+  id: string;
+}
+
+const KEYBOARD_ROWS: KeyDef[][] = [
+  [
+    { id: "`", label: "`" }, { id: "1", label: "1" }, { id: "2", label: "2" },
+    { id: "3", label: "3" }, { id: "4", label: "4" }, { id: "5", label: "5" },
+    { id: "6", label: "6" }, { id: "7", label: "7" }, { id: "8", label: "8" },
+    { id: "9", label: "9" }, { id: "0", label: "0" }, { id: "-", label: "-" },
+    { id: "=", label: "=" },
+  ],
+  [
+    { id: "q", label: "Q" }, { id: "w", label: "W" }, { id: "e", label: "E" },
+    { id: "r", label: "R" }, { id: "t", label: "T" }, { id: "y", label: "Y" },
+    { id: "u", label: "U" }, { id: "i", label: "I" }, { id: "o", label: "O" },
+    { id: "p", label: "P" }, { id: "[", label: "[" }, { id: "]", label: "]" },
+    { id: "\\", label: "\\" },
+  ],
+  [
+    { id: "a", label: "A", home: true }, { id: "s", label: "S", home: true },
+    { id: "d", label: "D", home: true }, { id: "f", label: "F", home: true },
+    { id: "g", label: "G" }, { id: "h", label: "H" },
+    { id: "j", label: "J", home: true }, { id: "k", label: "K", home: true },
+    { id: "l", label: "L", home: true }, { id: ";", label: ";", home: true },
+    { id: "'", label: "'" },
+  ],
+  [
+    { id: "z", label: "Z" }, { id: "x", label: "X" }, { id: "c", label: "C" },
+    { id: "v", label: "V" }, { id: "b", label: "B" }, { id: "n", label: "N" },
+    { id: "m", label: "M" }, { id: ",", label: "," }, { id: ".", label: "." },
+    { id: "/", label: "/" },
+  ],
+  [
+    { id: " ", label: "Space", width: 200 },
+  ],
+];
+
+// ============================================================
+// Render Functions
+// ============================================================
+
+function renderKeyboard() {
+  keyboard.innerHTML = "";
+  for (const row of KEYBOARD_ROWS) {
+    const rowEl = document.createElement("div");
+    rowEl.className = "keyboard-row";
+    for (const keyDef of row) {
+      const keyEl = document.createElement("div");
+      keyEl.className = "key";
+      if (keyDef.width) keyEl.style.width = keyDef.width + "px";
+      if (keyDef.home) keyEl.classList.add("home");
+      keyEl.id = "key-" + keyDef.id;
+
+      const heatEl = document.createElement("div");
+      heatEl.className = "key-heat";
+      keyEl.appendChild(heatEl);
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "key-label";
+      labelEl.textContent = keyDef.label;
+      keyEl.appendChild(labelEl);
+
+      rowEl.appendChild(keyEl);
+    }
+    keyboard.appendChild(rowEl);
+  }
+}
+
+function renderText(text: string, position: number, lastCorrect?: boolean) {
+  textDisplay.innerHTML = "";
+  for (let i = 0; i < text.length; i++) {
+    const span = document.createElement("span");
+    span.className = "char";
+    span.textContent = text[i];
+
+    if (i < position) {
+      // Already typed — we'll mark correct/incorrect via the result
+      span.classList.add("correct");
+    } else if (i === position) {
+      span.classList.add("current");
+    } else {
+      span.classList.add("pending");
+    }
+
+    textDisplay.appendChild(span);
+  }
+}
+
+function markCharCorrect(position: number, correct: boolean) {
+  const chars = textDisplay.querySelectorAll(".char");
+  const idx = position - 1;
+  if (idx >= 0 && idx < chars.length) {
+    chars[idx].classList.remove("current");
+    chars[idx].classList.add(correct ? "correct" : "incorrect");
+  }
+  // Move cursor to next position
+  if (position < chars.length) {
+    chars[position].classList.add("current");
+  }
+}
+
+function updateHeatmap(heatmap: Record<string, number>, activeKeys: string[], masteredKeys: string[]) {
+  // Find max presses for normalization
+  let maxPresses = 0;
+  for (const ch of activeKeys) {
+    const count = heatmap[ch] || 0;
+    if (count > maxPresses) maxPresses = count;
+  }
+
+  for (const keyDef of KEYBOARD_ROWS.flat()) {
+    const keyEl = document.getElementById("key-" + keyDef.id);
+    if (!keyEl) continue;
+
+    const ch = keyDef.id;
+    const count = heatmap[ch] || 0;
+    const isActive = activeKeys.includes(ch);
+    const isMastered = masteredKeys.includes(ch);
+
+    keyEl.classList.toggle("active", isActive && count > 0);
+    keyEl.classList.toggle("mastered", isMastered);
+
+    // Calculate heat level (0-8)
+    const heatEl = keyEl.querySelector(".key-heat") as HTMLElement;
+    if (heatEl && isActive && maxPresses > 0) {
+      const ratio = count / maxPresses;
+      const level = Math.min(8, Math.floor(ratio * 8));
+      heatEl.className = "key-heat heat-" + level;
+    }
+  }
+}
+
+function showSprintNotification(sprint: SprintInfo) {
+  const sprintWpm = document.getElementById("sprintWpm")!;
+  const sprintAcc = document.getElementById("sprintAccuracy")!;
+  const sprintHits = document.getElementById("sprintHits")!;
+
+  sprintWpm.textContent = Math.round(sprint.wpm) + " WPM";
+  sprintAcc.textContent = Math.round(sprint.accuracy * 100) + "%";
+  sprintHits.textContent = sprint.hits + " hits";
+
+  sprintNotification.style.display = "block";
+  setTimeout(() => {
+    sprintNotification.style.display = "none";
+  }, 3000);
+}
+
+// ============================================================
+// Tauri IPC
+// ============================================================
+
+async function loadNewLesson() {
+  try {
+    const text = await invoke<string>("get_lesson");
+    currentText = text;
+    currentPosition = 0;
+    isTyping = false;
+    renderText(text, 0);
+  } catch (e) {
+    console.error("Failed to load lesson:", e);
+    textDisplay.textContent = "Error loading lesson: " + e;
+  }
+}
+
+async function handleKeypress(key: string, shift: boolean) {
+  if (!currentText || currentPosition >= currentText.length) return;
+
+  const timestamp = performance.now();
+
+  try {
+    const result = await invoke<KeypressResult>("record_keypress", {
+      key,
+      shift,
+      timestamp,
+    });
+
+    // Mark the character
+    markCharCorrect(result.position, result.correct);
+    currentPosition = result.position;
+
+    // Update stats display
+    wpmValue.textContent = Math.round(result.wpm).toString();
+    accuracyValue.textContent = Math.round(result.accuracy * 100) + "%";
+
+    // Update heatmap
+    // We need active_keys — get from stats periodically or include in result
+    // For now, update heatmap from the result
+    updateHeatmapFromResult(result);
+
+    // Show sprint notification if a sprint completed
+    if (result.completed_sprint) {
+      showSprintNotification(result.completed_sprint);
+      sprintValue.textContent = (parseInt(sprintValue.textContent) + 1).toString();
+    }
+
+    // If we've reached the end of the text, auto-load a new lesson
+    if (currentPosition >= currentText.length) {
+      setTimeout(() => loadNewLesson(), 500);
+    }
+  } catch (e) {
+    console.error("Keypress error:", e);
+  }
+}
+
+async function updateHeatmapFromResult(result: KeypressResult) {
+  // Get full stats to get active/mastered keys
+  try {
+    const stats = await invoke<StatsResponse>("get_stats");
+    updateHeatmap(result.heatmap, stats.active_keys, stats.mastered_keys);
+    activeKeysValue.textContent = stats.active_keys.length.toString();
+  } catch (e) {
+    // Fallback: just update with what we have
+    const allKeys = Object.keys(result.heatmap);
+    updateHeatmap(result.heatmap, allKeys, []);
+  }
+}
+
+async function showStatsModal() {
+  const modal = document.getElementById("statsModal")!;
+  const content = document.getElementById("statsContent")!;
+
+  try {
+    const stats = await invoke<StatsResponse>("get_stats");
+
+    content.innerHTML = `
+      <div class="stats-summary">
+        <div class="stat-card">
+          <div class="value">${Math.round(stats.avg_wpm)}</div>
+          <div class="label">Avg WPM</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${Math.round(stats.accuracy * 100)}%</div>
+          <div class="label">Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${stats.sprint_count}</div>
+          <div class="label">Sprints</div>
+        </div>
+      </div>
+      <p style="margin-bottom:8px;color:var(--text-secondary);font-size:13px;">
+        Active keys: ${stats.active_keys.join(", ").toUpperCase() || "none"}<br>
+        Mastered keys: ${stats.mastered_keys.join(", ").toUpperCase() || "none"}
+      </p>
+      ${stats.key_details.length > 0 ? `
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Hits</th>
+              <th>Misses</th>
+              <th>Avg Latency</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stats.key_details.map(k => `
+              <tr>
+                <td>${k.character === " " ? "Space" : k.character.toUpperCase()}</td>
+                <td>${k.hit_count}</td>
+                <td>${k.miss_count}</td>
+                <td>${Math.round(k.avg_latency_ms)}ms</td>
+                <td>${(k.confidence * 100).toFixed(0)}%</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      ` : '<p style="color:var(--text-dim)">No data yet. Start typing!</p>'}
+    `;
+
+    modal.style.display = "flex";
+  } catch (e) {
+    content.innerHTML = `<p>Error loading stats: ${e}</p>`;
+    modal.style.display = "flex";
+  }
+}
+
+// ============================================================
+// Settings Modal
+// ============================================================
+
+function showSettingsModal() {
+  const modal = document.getElementById("settingsModal")!;
+  modal.style.display = "flex";
+}
+
+function hideSettingsModal() {
+  const modal = document.getElementById("settingsModal")!;
+  modal.style.display = "none";
+}
+
+async function saveSettings() {
+  const idleTimeout = parseFloat(
+    (document.getElementById("idleTimeoutInput") as HTMLInputElement).value
+  ) * 1000;
+  const targetWpm = parseFloat(
+    (document.getElementById("targetWpmInput") as HTMLInputElement).value
+  );
+  const wordCount = parseInt(
+    (document.getElementById("wordCountInput") as HTMLInputElement).value
+  );
+
+  try {
+    await invoke("update_settings", {
+      idleTimeoutMs: idleTimeout,
+      targetWpm,
+      wordCount,
+    });
+    hideSettingsModal();
+    // Reload lesson with new settings
+    await loadNewLesson();
+  } catch (e) {
+    console.error("Failed to save settings:", e);
+  }
+}
+
+// ============================================================
+// Event Listeners
+// ============================================================
+
+document.addEventListener("keydown", (e: KeyboardEvent) => {
+  // Ignore modifier keys
+  if (["Shift", "Control", "Alt", "Meta", "CapsLock", "Tab", "Escape"].includes(e.key)) {
+    return;
+  }
+
+  // Handle Enter as a newline
+  if (e.key === "Enter") {
+    e.preventDefault();
+    return;
+  }
+
+  // Block browser shortcuts during typing
+  if (isTyping && (e.ctrlKey || e.metaKey)) {
+    return;
+  }
+
+  e.preventDefault();
+
+  if (!isTyping) {
+    isTyping = true;
+  }
+
+  handleKeypress(e.key, e.shiftKey);
+});
+
+// Button handlers
+document.getElementById("newLessonBtn")!.addEventListener("click", loadNewLesson);
+document.getElementById("statsBtn")!.addEventListener("click", showStatsModal);
+document.getElementById("settingsBtn")!.addEventListener("click", showSettingsModal);
+document.getElementById("closeSettingsBtn")!.addEventListener("click", hideSettingsModal);
+document.getElementById("cancelSettingsBtn")!.addEventListener("click", hideSettingsModal);
+document.getElementById("saveSettingsBtn")!.addEventListener("click", saveSettings);
+document.getElementById("closeStatsBtn")!.addEventListener("click", () => {
+  document.getElementById("statsModal")!.style.display = "none";
+});
+document.getElementById("closeStatsBtn2")!.addEventListener("click", () => {
+  document.getElementById("statsModal")!.style.display = "none";
+});
+document.getElementById("resetStatsBtn")!.addEventListener("click", async () => {
+  if (confirm("Reset all statistics? This cannot be undone.")) {
+    await invoke("reset_stats");
+    document.getElementById("statsModal")!.style.display = "none";
+    sprintValue.textContent = "0";
+    await loadNewLesson();
+  }
+});
+
+// Close modals on overlay click
+document.querySelectorAll(".modal-overlay").forEach(overlay => {
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      (overlay as HTMLElement).style.display = "none";
+    }
+  });
+});
+
+// ============================================================
+// Init
+// ============================================================
+
+renderKeyboard();
+loadNewLesson();
