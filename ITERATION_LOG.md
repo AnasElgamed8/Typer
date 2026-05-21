@@ -112,3 +112,34 @@ Cannot assign a final score until it's built and tested. The code LOOKS correct 
 - Unused functions: is_printable(), Finger enum (will be used when avatar system is added)
 
 **Next:** Need to run the app on a machine with a display to verify heatmap, typing, sprint detection, and adaptive algorithm.
+
+## Kanban Pipeline Setup — 2026-05-21 08:15
+
+**Lesson learned from iteration 1:** Solo-coding defeats the purpose of the kanban system. Using proper pipeline now.
+
+**Iteration 2: UI Polish + Heatmap Redesign**
+- T1 (study): t_2008992b — Research UI libraries, typing app design patterns
+- T2 (coder): t_da740ab8 — Polish UI, fix all warnings, professional look (depends: T1)
+- T3 (main): t_4e039a7b — Quality gate review (depends: T2)
+
+**Iteration 3: Avatar System**
+- T4 (study): t_b964d0cd — Research sprite animation, avatar systems
+- T5 (coder): t_12c150f8 — Implement avatar system (depends: T4)
+- T6 (main): t_bf69d62e — Final quality gate (depends: T5)
+
+**Quality Rubric (Iteration 2):**
+- Visual Design: 30% (must look professional)
+- Functionality: 25% (typing, sprint, adaptive all work)
+- Code Quality: 20% (0 warnings, clean code)
+- Build: 15% (compiles, builds successfully)
+- Documentation: 10% (README, comments, log)
+
+**Quality Rubric (Iteration 3):**
+- Avatar System: 25% (3-state sprite, custom loading)
+- Visual Design: 25% (carries over from iter 2)
+- Functionality: 20% (everything still works)
+- Code Quality: 15% (0 warnings)
+- Build: 10% (compiles, builds)
+- Documentation: 5%
+
+**Threshold:** 85% overall, no dimension below 50%
