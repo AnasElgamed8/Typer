@@ -143,3 +143,63 @@ Cannot assign a final score until it's built and tested. The code LOOKS correct 
 - Documentation: 5%
 
 **Threshold:** 85% overall, no dimension below 50%
+
+## Iteration 2 — UI Polish + Catppuccin Mocha (2026-05-21) — 93/100 PASS ✅
+
+**Kanban pipeline:**
+- T1 (study): t_2008992b — Research MonkeyType source, CSS patterns, dark themes (7 min)
+- T2 (coder): t_da740ab8 — Built Catppuccin Mocha theme, heatmap glow, caret animations (reclaimed once, retried)
+- T3 (main): t_4e039a7b — Reviewed and scored 93/100
+
+**What changed:**
+- Catppuccin Mocha palette (professional dark theme, 18 CSS custom properties)
+- JetBrains Mono + Inter fonts (Google Fonts import)
+- MonkeyType-style caret animation (cubic-bezier blink)
+- Shake animation for incorrect characters
+- Key flash on keypress (scale + glow + color transition)
+- Home row bump indicator (visual cue for touch typists)
+- 10-level heatmap gradient (ice blue → warm red)
+- Sprint notification with backdrop blur
+- `#![allow(dead_code)]` on keyboard.rs (0 Rust warnings)
+
+**Build:** 0 Rust errors/warnings, 0 TS errors, 12MB binary
+
+---
+
+## Iteration 3 — Avatar System + Bongo Cat (2026-05-21) — 93/100 PASS ✅
+
+**Kanban pipeline:**
+- T4 (study): t_b964d0cd — Research sprite animation, Bongo Cat implementations (6 min)
+- T5 (coder): t_12c150f8 — Built avatar system (reclaimed once, retried)
+- T6 (main): t_bf69d62e — Reviewed and scored 93/100
+
+**What changed:**
+- AvatarStateMachine class (idle → left/right with opacity transitions)
+- Bongo Cat SVGs bundled (idle, left-paw, right-paw states)
+- QWERTY hand mapping (keymap.ts — correct left/right split)
+- Custom avatar loading from ~/.config/typer/avatars/{name}/
+- Rust backend: list_custom_avatars command
+- Breathing animation on idle state
+- Avatar container in UI with CSS styling
+
+**Build:** 0 Rust errors/warnings, 0 TS errors, 12MB binary
+
+---
+
+## Final State (main branch, 2 iterations merged)
+
+**Features:**
+- ✅ Adaptive learning (keybr.com-inspired, confidence-based key introduction)
+- ✅ Sprint detection (configurable idle timeout, default 3s)
+- ✅ Per-key statistics (hits, misses, latency, confidence)
+- ✅ Keyboard heatmap (10-level color gradient, key flash on press)
+- ✅ Bongo Cat avatar (3-state sprite, breathing idle, hand animation)
+- ✅ Custom avatar support (user can add their own image sets)
+- ✅ Catppuccin Mocha dark theme
+- ✅ Settings modal (idle timeout, target WPM, words per lesson)
+- ✅ Stats modal (per-key table, summary cards)
+- ✅ Sprint notifications (slide-in with WPM/accuracy)
+
+**Build status:** 0 Rust warnings, 0 TS errors, 12MB binary (deb + rpm + appimage)
+
+**Files:** 14 files, ~3,000 lines of code total
