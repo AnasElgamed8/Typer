@@ -260,28 +260,50 @@ body {
 
 .sprint-card h3 {
   color: var(--accent);
-  margin-bottom: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .sprint-stats {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 500;
 }
 
 .sprint-stats span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
 }
+
+.sprint-stats span::after {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#sprintWpm::after { content: 'WPM'; }
+#sprintAccuracy::after { content: 'ACC'; }
+#sprintHits::after { content: 'HITS'; }
 
 @keyframes slideIn {
   from { transform: translateX(120%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(120%); opacity: 0; }
 }
 
 /* Keyboard Heatmap */
@@ -368,7 +390,17 @@ body {
 
 /* Active key glow */
 .key.active {
-  border-color: rgba(203, 166, 247, 0.2);
+  border-color: rgba(203, 166, 247, 0.3);
+  box-shadow: 0 0 8px rgba(203, 166, 247, 0.1);
+}
+
+.key.active .key-label {
+  color: var(--text-primary);
+}
+
+.key:hover {
+  border-color: rgba(205, 214, 244, 0.15);
+  background: rgba(49, 50, 68, 0.6);
 }
 
 .key.space {
@@ -397,17 +429,17 @@ body {
   border-color: rgba(166, 227, 161, 0.3);
 }
 
-/* Heatmap colors — smooth gradient from cool to hot */
+/* Heatmap colors — smooth gradient from cool to hot with glow */
 .heat-0 { background: transparent; }
-.heat-1 { background: rgba(137, 180, 250, 0.12); }      /* ice blue */
-.heat-2 { background: rgba(137, 180, 250, 0.25); }      /* light blue */
-.heat-3 { background: rgba(166, 227, 161, 0.2); }       /* cool green */
-.heat-4 { background: rgba(166, 227, 161, 0.35); }      /* green */
-.heat-5 { background: rgba(249, 226, 175, 0.25); }      /* warm amber */
-.heat-6 { background: rgba(249, 226, 175, 0.4); }       /* amber */
-.heat-7 { background: rgba(243, 139, 168, 0.3); }       /* warm red */
-.heat-8 { background: rgba(243, 139, 168, 0.45); }      /* red */
-.heat-9 { background: rgba(243, 139, 168, 0.6); }       /* hot red */
+.heat-1 { background: rgba(137, 180, 250, 0.12); box-shadow: inset 0 0 8px rgba(137, 180, 250, 0.05); }
+.heat-2 { background: rgba(137, 180, 250, 0.25); box-shadow: inset 0 0 10px rgba(137, 180, 250, 0.1); }
+.heat-3 { background: rgba(166, 227, 161, 0.2); box-shadow: inset 0 0 10px rgba(166, 227, 161, 0.1); }
+.heat-4 { background: rgba(166, 227, 161, 0.35); box-shadow: inset 0 0 12px rgba(166, 227, 161, 0.15); }
+.heat-5 { background: rgba(249, 226, 175, 0.25); box-shadow: inset 0 0 12px rgba(249, 226, 175, 0.12); }
+.heat-6 { background: rgba(249, 226, 175, 0.4); box-shadow: inset 0 0 14px rgba(249, 226, 175, 0.18), 0 0 6px rgba(249, 226, 175, 0.1); }
+.heat-7 { background: rgba(243, 139, 168, 0.3); box-shadow: inset 0 0 14px rgba(243, 139, 168, 0.15), 0 0 8px rgba(243, 139, 168, 0.1); }
+.heat-8 { background: rgba(243, 139, 168, 0.5); box-shadow: inset 0 0 16px rgba(243, 139, 168, 0.2), 0 0 10px rgba(243, 139, 168, 0.15); }
+.heat-9 { background: rgba(243, 139, 168, 0.65); box-shadow: inset 0 0 18px rgba(243, 139, 168, 0.25), 0 0 12px rgba(243, 139, 168, 0.2); }
 
 /* Modals */
 .modal-overlay {
