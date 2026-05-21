@@ -65,6 +65,7 @@ let allAvatarSets: AvatarSet[] = [];
 // ============================================================
 
 const textDisplay = document.getElementById("textDisplay")!;
+const practiceArea = document.querySelector(".practice-area") as HTMLElement;
 const wpmValue = document.getElementById("wpmValue")!;
 const accuracyValue = document.getElementById("accuracyValue")!;
 const sprintValue = document.getElementById("sprintValue")!;
@@ -232,22 +233,29 @@ function showSprintNotification(sprint: SprintInfo) {
   const sprintAcc = document.getElementById("sprintAccuracy")!;
   const sprintHits = document.getElementById("sprintHits")!;
 
-  sprintWpm.textContent = Math.round(sprint.wpm) + " WPM";
+  sprintWpm.textContent = Math.round(sprint.wpm).toString();
   sprintAcc.textContent = Math.round(sprint.accuracy * 100) + "%";
-  sprintHits.textContent = sprint.hits + " hits";
+  sprintHits.textContent = sprint.hits.toString();
 
   sprintNotification.style.display = "block";
-  sprintNotification.style.animation = "none";
-  void sprintNotification.offsetWidth;
-  sprintNotification.style.animation = "slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)";
+
+  // Force reflow then animate card in
+  const card = sprintNotification.querySelector(".sprint-card") as HTMLElement;
+  if (card) {
+    card.style.animation = "none";
+    void card.offsetWidth;
+    card.style.animation = "slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
+  }
 
   setTimeout(() => {
-    sprintNotification.style.animation = "slideOut 0.3s cubic-bezier(0.7, 0, 0.84, 0) forwards";
+    if (card) {
+      card.style.animation = "slideOut 0.4s cubic-bezier(0.7, 0, 0.84, 0) forwards";
+    }
     setTimeout(() => {
       sprintNotification.style.display = "none";
-      sprintNotification.style.animation = "";
-    }, 300);
-  }, 3200);
+      if (card) card.style.animation = "";
+    }, 400);
+  }, 3500);
 }
 
 // ============================================================
@@ -549,6 +557,7 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
 
   if (!isTyping) {
     isTyping = true;
+    practiceArea.classList.add("typing");
   }
 
   // Update avatar state
