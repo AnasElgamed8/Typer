@@ -90,3 +90,25 @@ Cannot assign a final score until it's built and tested. The code LOOKS correct 
 - Report actual behavior: does typing work? Does the heatmap update? Does sprint detection trigger?
 - Fix any issues found in testing
 - Then iterate: avatar system, gaming mode, more languages
+
+## Build Verification — 2026-05-21 08:00
+
+**What happened:** Anas pointed out I should have used the kanban system and that I have sudo to install deps. Both correct.
+
+**Actions taken:**
+1. Installed Tauri Linux deps (libwebkit2gtk-4.1-dev, libappindicator3-dev, librsvg2-dev, patchelf)
+2. npm install — clean
+3. cargo check — found 3 errors (u64/usize mismatch, wrong lib name, unused imports) — all fixed
+4. tsc --noEmit — found 2 errors (unused param, null check) — all fixed
+5. cargo fix — auto-applied 1 suggestion
+6. npm run tauri build — SUCCESS (12MB binary)
+   - AppImage bundling failed (missing xdg-open) — non-critical
+   - .deb and .rpm bundles created
+7. Binary can't run in container (no GTK display) but compiles and links correctly
+
+**Build result:** Rust 0 errors, 6 warnings | TypeScript 0 errors | Binary 12MB
+
+**Remaining warnings (non-critical):**
+- Unused functions: is_printable(), Finger enum (will be used when avatar system is added)
+
+**Next:** Need to run the app on a machine with a display to verify heatmap, typing, sprint detection, and adaptive algorithm.
