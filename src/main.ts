@@ -51,7 +51,7 @@ interface KeyDetail {
 let currentText = "";
 let currentPosition = 0;
 let isTyping = false;
-let lastTimestamp = 0;
+let charStates: ("pending" | "correct" | "incorrect" | "corrected")[] = [];
 
 // ============================================================
 // DOM Elements
@@ -78,7 +78,7 @@ interface KeyDef {
 
 const KEYBOARD_ROWS: KeyDef[][] = [
   [
-    { id: "`", label: "`" }, { id: "1", label: "1" }, { id: "2", label: "2" },
+    { id: "\x60", label: "\x60" }, { id: "1", label: "1" }, { id: "2", label: "2" },
     { id: "3", label: "3" }, { id: "4", label: "4" }, { id: "5", label: "5" },
     { id: "6", label: "6" }, { id: "7", label: "7" }, { id: "8", label: "8" },
     { id: "9", label: "9" }, { id: "0", label: "0" }, { id: "-", label: "-" },
@@ -106,7 +106,7 @@ const KEYBOARD_ROWS: KeyDef[][] = [
     { id: "/", label: "/" },
   ],
   [
-    { id: " ", label: "Space", width: 200 },
+    { id: " ", label: "Space", width: 220 },
   ],
 ];
 
@@ -143,14 +143,15 @@ function renderKeyboard() {
 
 function renderText(text: string, position: number) {
   textDisplay.innerHTML = "";
+  charStates = new Array(text.length).fill("pending");
   for (let i = 0; i < text.length; i++) {
     const span = document.createElement("span");
     span.className = "char";
     span.textContent = text[i];
 
     if (i < position) {
-      // Already typed — we'll mark correct/incorrect via the result
       span.classList.add("correct");
+      charStates[i] = "correct";
     } else if (i === position) {
       span.classList.add("current");
     } else {
@@ -166,16 +167,32 @@ function markCharCorrect(position: number, correct: boolean) {
   const idx = position - 1;
   if (idx >= 0 && idx < chars.length) {
     chars[idx].classList.remove("current");
-    chars[idx].classList.add(correct ? "correct" : "incorrect");
+    if (correct) {
+      chars[idx].classList.add("correct");
+      charStates[idx] = "correct";
+    } else {
+      chars[idx].classList.add("incorrect");
+      charStates[idx] = "incorrect";
+      setTimeout(() => chars[idx].classList.remove("incorrect"), 300);
+    }
   }
-  // Move cursor to next position
   if (position < chars.length) {
     chars[position].classList.add("current");
   }
 }
 
+function flashKeyOnBoard(keyId: string) {
+  const keyEl = document.getElementById("key-" + keyId);
+  if (!keyEl) return;
+  keyEl.classList.remove("flash");
+  void keyEl.offsetWidth;
+  keyEl.classList.add("flash");
+  keyEl.addEventListener("animationend", () => {
+    keyEl.classList.remove("flash");
+  }, { once: true });
+}
+
 function updateHeatmap(heatmap: Record<string, number>, activeKeys: string[], masteredKeys: string[]) {
-  // Find max presses for normalization
   let maxPresses = 0;
   for (const ch of activeKeys) {
     const count = heatmap[ch] || 0;
@@ -194,11 +211,10 @@ function updateHeatmap(heatmap: Record<string, number>, activeKeys: string[], ma
     keyEl.classList.toggle("active", isActive && count > 0);
     keyEl.classList.toggle("mastered", isMastered);
 
-    // Calculate heat level (0-8)
     const heatEl = keyEl.querySelector(".key-heat") as HTMLElement;
     if (heatEl && isActive && maxPresses > 0) {
       const ratio = count / maxPresses;
-      const level = Math.min(8, Math.floor(ratio * 8));
+      const level = Math.min(9, Math.floor(ratio * 9));
       heatEl.className = "key-heat heat-" + level;
     }
   }
@@ -214,9 +230,13 @@ function showSprintNotification(sprint: SprintInfo) {
   sprintHits.textContent = sprint.hits + " hits";
 
   sprintNotification.style.display = "block";
+  sprintNotification.style.animation = "none";
+  void sprintNotification.offsetWidth;
+  sprintNotification.style.animation = "";
+
   setTimeout(() => {
     sprintNotification.style.display = "none";
-  }, 3000);
+  }, 3500);
 }
 
 // ============================================================
@@ -248,26 +268,21 @@ async function handleKeypress(key: string, shift: boolean) {
       timestamp,
     });
 
-    // Mark the character
     markCharCorrect(result.position, result.correct);
     currentPosition = result.position;
 
-    // Update stats display
+    flashKeyOnBoard(key.toLowerCase());
+
     wpmValue.textContent = Math.round(result.wpm).toString();
     accuracyValue.textContent = Math.round(result.accuracy * 100) + "%";
 
-    // Update heatmap
-    // We need active_keys — get from stats periodically or include in result
-    // For now, update heatmap from the result
     updateHeatmapFromResult(result);
 
-    // Show sprint notification if a sprint completed
     if (result.completed_sprint) {
       showSprintNotification(result.completed_sprint);
       sprintValue.textContent = (parseInt(sprintValue.textContent || "0") + 1).toString();
     }
 
-    // If we've reached the end of the text, auto-load a new lesson
     if (currentPosition >= currentText.length) {
       setTimeout(() => loadNewLesson(), 500);
     }
@@ -277,13 +292,11 @@ async function handleKeypress(key: string, shift: boolean) {
 }
 
 async function updateHeatmapFromResult(result: KeypressResult) {
-  // Get full stats to get active/mastered keys
   try {
     const stats = await invoke<StatsResponse>("get_stats");
     updateHeatmap(result.heatmap, stats.active_keys, stats.mastered_keys);
     activeKeysValue.textContent = stats.active_keys.length.toString();
-  } catch (e) {
-    // Fallback: just update with what we have
+  } catch (_e) {
     const allKeys = Object.keys(result.heatmap);
     updateHeatmap(result.heatmap, allKeys, []);
   }
@@ -311,9 +324,9 @@ async function showStatsModal() {
           <div class="label">Sprints</div>
         </div>
       </div>
-      <p style="margin-bottom:8px;color:var(--text-secondary);font-size:13px;">
-        Active keys: ${stats.active_keys.join(", ").toUpperCase() || "none"}<br>
-        Mastered keys: ${stats.mastered_keys.join(", ").toUpperCase() || "none"}
+      <p style="margin-bottom:12px;color:var(--text-secondary);font-size:13px;font-family:var(--font-mono);">
+        Active: ${stats.active_keys.join(", ").toUpperCase() || "none"}<br>
+        Mastered: ${stats.mastered_keys.join(", ").toUpperCase() || "none"}
       </p>
       ${stats.key_details.length > 0 ? `
         <table class="stats-table">
@@ -380,7 +393,6 @@ async function saveSettings() {
       wordCount,
     });
     hideSettingsModal();
-    // Reload lesson with new settings
     await loadNewLesson();
   } catch (e) {
     console.error("Failed to save settings:", e);
@@ -392,18 +404,15 @@ async function saveSettings() {
 // ============================================================
 
 document.addEventListener("keydown", (e: KeyboardEvent) => {
-  // Ignore modifier keys
   if (["Shift", "Control", "Alt", "Meta", "CapsLock", "Tab", "Escape"].includes(e.key)) {
     return;
   }
 
-  // Handle Enter as a newline
   if (e.key === "Enter") {
     e.preventDefault();
     return;
   }
 
-  // Block browser shortcuts during typing
   if (isTyping && (e.ctrlKey || e.metaKey)) {
     return;
   }
@@ -417,7 +426,6 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
   handleKeypress(e.key, e.shiftKey);
 });
 
-// Button handlers
 document.getElementById("newLessonBtn")!.addEventListener("click", loadNewLesson);
 document.getElementById("statsBtn")!.addEventListener("click", showStatsModal);
 document.getElementById("settingsBtn")!.addEventListener("click", showSettingsModal);
@@ -439,7 +447,6 @@ document.getElementById("resetStatsBtn")!.addEventListener("click", async () => 
   }
 });
 
-// Close modals on overlay click
 document.querySelectorAll(".modal-overlay").forEach(overlay => {
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
