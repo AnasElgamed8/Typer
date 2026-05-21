@@ -1,4 +1,5 @@
-const { invoke } = window.__TAURI__.core;
+// Tauri invoke wrapper
+const invoke = (window as any).__TAURI__.core.invoke as <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
 
 // ============================================================
 // Types
@@ -140,7 +141,7 @@ function renderKeyboard() {
   }
 }
 
-function renderText(text: string, position: number, lastCorrect?: boolean) {
+function renderText(text: string, position: number) {
   textDisplay.innerHTML = "";
   for (let i = 0; i < text.length; i++) {
     const span = document.createElement("span");
@@ -263,7 +264,7 @@ async function handleKeypress(key: string, shift: boolean) {
     // Show sprint notification if a sprint completed
     if (result.completed_sprint) {
       showSprintNotification(result.completed_sprint);
-      sprintValue.textContent = (parseInt(sprintValue.textContent) + 1).toString();
+      sprintValue.textContent = (parseInt(sprintValue.textContent || "0") + 1).toString();
     }
 
     // If we've reached the end of the text, auto-load a new lesson

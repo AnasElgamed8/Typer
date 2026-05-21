@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    typer_scaffold_lib::run()
+    typer_lib::run()
 }

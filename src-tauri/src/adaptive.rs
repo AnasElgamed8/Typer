@@ -1,6 +1,5 @@
 use crate::stats::TypingStats;
 use rand::prelude::*;
-use serde::{Deserialize, Serialize};
 
 /// The target typing speed in WPM. Keys that are typed at this speed
 /// or faster are considered "learned" (confidence >= 1.0).
@@ -178,7 +177,7 @@ impl AdaptiveLesson {
         }
 
         // Build weighted word list: words with weak keys get higher weight
-        let mut weighted_words: Vec<(&str, f64)> = valid_words
+        let weighted_words: Vec<(&str, f64)> = valid_words
             .iter()
             .map(|&word| {
                 let weight = word

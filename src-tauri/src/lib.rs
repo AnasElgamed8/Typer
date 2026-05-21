@@ -129,7 +129,7 @@ fn record_keypress(
         confidence.insert(ch, lesson.key_confidence(ch, &stats));
     }
 
-    let new_position = position + 1;
+    let new_position = (position + 1) as usize;
 
     Ok(KeypressResult {
         correct,
