@@ -239,11 +239,15 @@ function showSprintNotification(sprint: SprintInfo) {
   sprintNotification.style.display = "block";
   sprintNotification.style.animation = "none";
   void sprintNotification.offsetWidth;
-  sprintNotification.style.animation = "";
+  sprintNotification.style.animation = "slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)";
 
   setTimeout(() => {
-    sprintNotification.style.display = "none";
-  }, 3500);
+    sprintNotification.style.animation = "slideOut 0.3s cubic-bezier(0.7, 0, 0.84, 0) forwards";
+    setTimeout(() => {
+      sprintNotification.style.display = "none";
+      sprintNotification.style.animation = "";
+    }, 300);
+  }, 3200);
 }
 
 // ============================================================
