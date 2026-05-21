@@ -64,6 +64,7 @@ impl KeyStats {
     }
 
     /// Accuracy as a ratio [0.0, 1.0].
+    #[allow(dead_code)]
     pub fn accuracy(&self) -> f64 {
         let total = self.hit_count + self.miss_count;
         if total == 0 {

@@ -83,6 +83,13 @@
             <label>Words per Lesson</label>
             <input type="number" id="wordCountInput" value="15" min="5" max="100" step="5">
           </div>
+          <div class="setting-group">
+            <label>Avatar</label>
+            <select id="avatarSelect">
+              <option value="__none__">No Avatar</option>
+              <option value="Bongo Cat" selected>Bongo Cat</option>
+            </select>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn" id="saveSettingsBtn">Save</button>
@@ -107,6 +114,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Avatar container is created dynamically by main.ts -->
   </div>
 
   <script type="module" src="/src/main.ts"></script>

@@ -263,6 +263,67 @@ fn reset_stats(state: State<AppState>) -> Result<(), String> {
     Ok(())
 }
 
+/// Information about a custom avatar set found on disk.
+#[derive(Debug, Serialize)]
+pub struct CustomAvatarInfo {
+    /// Display name (from avatar.json or folder name)
+    pub name: String,
+    /// Absolute path to the avatar folder
+    pub path: String,
+    /// Whether idle.png/svg exists
+    pub has_idle: bool,
+    /// Whether left.png/svg exists
+    pub has_left: bool,
+    /// Whether right.png/svg exists
+    pub has_right: bool,
+}
+
+/// List custom avatar sets from ~/.config/typer/avatars/.
+/// Each subfolder is an avatar set. We check for idle/left/right images.
+#[tauri::command]
+fn list_custom_avatars() -> Result<Vec<CustomAvatarInfo>, String> {
+    let config_dir = dirs::config_dir()
+        .ok_or_else(|| "Could not determine config directory".to_string())?;
+    let avatars_dir = config_dir.join("typer").join("avatars");
+
+    if !avatars_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut avatars = Vec::new();
+
+    let entries = std::fs::read_dir(&avatars_dir)
+        .map_err(|e| format!("Failed to read avatars directory: {}", e))?;
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+
+        let name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown")
+            .to_string();
+
+        // Check for image files (png or svg)
+        let has_idle = path.join("idle.png").exists() || path.join("idle.svg").exists();
+        let has_left = path.join("left.png").exists() || path.join("left.svg").exists();
+        let has_right = path.join("right.png").exists() || path.join("right.svg").exists();
+
+        avatars.push(CustomAvatarInfo {
+            name,
+            path: path.to_string_lossy().to_string(),
+            has_idle,
+            has_left,
+            has_right,
+        });
+    }
+
+    Ok(avatars)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -280,6 +341,7 @@ pub fn run() {
             get_stats,
             update_settings,
             reset_stats,
+            list_custom_avatars,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

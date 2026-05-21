@@ -1,6 +1,11 @@
 // Tauri invoke wrapper
 const invoke = (window as any).__TAURI__.core.invoke as <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
 
+import { AvatarStateMachine } from './avatar';
+import type { AvatarSet } from './avatar';
+import { loadAllAvatarSets, getAvatarByName, BONGO_CAT_AVATAR } from './avatar-config';
+import { getHand } from './keymap';
+
 // ============================================================
 // Types
 // ============================================================
@@ -52,6 +57,8 @@ let currentText = "";
 let currentPosition = 0;
 let isTyping = false;
 let charStates: ("pending" | "correct" | "incorrect" | "corrected")[] = [];
+let avatar: AvatarStateMachine | null = null;
+let allAvatarSets: AvatarSet[] = [];
 
 // ============================================================
 // DOM Elements
@@ -240,6 +247,117 @@ function showSprintNotification(sprint: SprintInfo) {
 }
 
 // ============================================================
+// Avatar System
+// ============================================================
+
+function createAvatarContainer() {
+  const container = document.createElement("div");
+  container.id = "avatarContainer";
+  container.className = "avatar-container";
+  document.getElementById("app")!.appendChild(container);
+  return container;
+}
+
+async function initAvatar() {
+  const container = createAvatarContainer();
+
+  // Load all available avatar sets (bundled + custom)
+  const bundled = await loadAllAvatarSets();
+  const custom = await loadCustomAvatars();
+  allAvatarSets = [...bundled, ...custom];
+
+  // Read saved avatar preference (default to Bongo Cat)
+  const savedName = localStorage.getItem("typer-avatar") || BONGO_CAT_AVATAR.name;
+  const selectedSet = getAvatarByName(allAvatarSets, savedName);
+
+  // Create the state machine
+  avatar = new AvatarStateMachine(container, selectedSet);
+
+  // Populate the settings dropdown
+  populateAvatarSelector();
+}
+
+function populateAvatarSelector() {
+  const select = document.getElementById("avatarSelect") as HTMLSelectElement | null;
+  if (!select) return;
+
+  select.innerHTML = "";
+
+  // "No avatar" option
+  const noneOpt = document.createElement("option");
+  noneOpt.value = "__none__";
+  noneOpt.textContent = "No Avatar";
+  select.appendChild(noneOpt);
+
+  // Avatar sets
+  for (const set of allAvatarSets) {
+    const opt = document.createElement("option");
+    opt.value = set.name;
+    opt.textContent = set.name;
+    select.appendChild(opt);
+  }
+
+  // Restore selection
+  const savedName = localStorage.getItem("typer-avatar") || BONGO_CAT_AVATAR.name;
+  if (savedName === "__none__") {
+    select.value = "__none__";
+  } else {
+    select.value = savedName;
+  }
+}
+
+function onAvatarSelectionChange(name: string) {
+  if (!avatar) return;
+
+  localStorage.setItem("typer-avatar", name);
+
+  if (name === "__none__") {
+    avatar.setEnabled(false);
+  } else {
+    const set = getAvatarByName(allAvatarSets, name);
+    avatar.setAvatarSet(set);
+    avatar.setEnabled(true);
+  }
+}
+
+// ============================================================
+// Custom Avatar Loading (via Tauri commands)
+// ============================================================
+
+interface CustomAvatarInfo {
+  name: string;
+  path: string;
+  has_idle: boolean;
+  has_left: boolean;
+  has_right: boolean;
+}
+
+async function loadCustomAvatars(): Promise<AvatarSet[]> {
+  try {
+    const customAvatars = await invoke<CustomAvatarInfo[]>("list_custom_avatars");
+    const sets: AvatarSet[] = [];
+
+    for (const info of customAvatars) {
+      if (info.has_idle && info.has_left && info.has_right) {
+        // Use convertFileSrc for local file paths in Tauri v2
+        const convertFileSrc = (window as any).__TAURI__.core.convertFileSrc as (path: string) => string;
+        sets.push({
+          name: info.name,
+          idle: convertFileSrc(info.path + "/idle.png"),
+          left: convertFileSrc(info.path + "/left.png"),
+          right: convertFileSrc(info.path + "/right.png"),
+        });
+      }
+    }
+
+    return sets;
+  } catch (_e) {
+    // Custom avatars not available (e.g. running in dev without Tauri)
+    return [];
+  }
+}
+
+// ============================================================
 // Tauri IPC
 // ============================================================
 
@@ -271,7 +389,7 @@ async function handleKeypress(key: string, shift: boolean) {
     markCharCorrect(result.position, result.correct);
     currentPosition = result.position;
 
-    flashKeyOnBoard(key.toLowerCase());
+    flashKeyOnBoard(key.toLowerCase() === " " ? " " : key.toLowerCase());
 
     wpmValue.textContent = Math.round(result.wpm).toString();
     accuracyValue.textContent = Math.round(result.accuracy * 100) + "%";
@@ -386,6 +504,12 @@ async function saveSettings() {
     (document.getElementById("wordCountInput") as HTMLInputElement).value
   );
 
+  // Save avatar selection
+  const avatarSelect = document.getElementById("avatarSelect") as HTMLSelectElement;
+  if (avatarSelect) {
+    onAvatarSelectionChange(avatarSelect.value);
+  }
+
   try {
     await invoke("update_settings", {
       idleTimeoutMs: idleTimeout,
@@ -423,7 +547,23 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
     isTyping = true;
   }
 
+  // Update avatar state
+  if (avatar) {
+    avatar.onKeyDown(getHand(e.key));
+  }
+
   handleKeypress(e.key, e.shiftKey);
+});
+
+document.addEventListener("keyup", (e: KeyboardEvent) => {
+  if (["Shift", "Control", "Alt", "Meta", "CapsLock", "Tab", "Escape"].includes(e.key)) {
+    return;
+  }
+
+  // Return avatar to idle after key release
+  if (avatar) {
+    avatar.onKeyUp();
+  }
 });
 
 document.getElementById("newLessonBtn")!.addEventListener("click", loadNewLesson);
@@ -461,3 +601,4 @@ document.querySelectorAll(".modal-overlay").forEach(overlay => {
 
 renderKeyboard();
 loadNewLesson();
+initAvatar();

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- Bongo Cat - Right Paw Down -->
+  <!-- Body -->
+  <ellipse cx="128" cy="180" rx="70" ry="50" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  
+  <!-- Head -->
+  <circle cx="128" cy="100" r="55" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  
+  <!-- Left Ear -->
+  <polygon points="85,60 75,25 100,50" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  <polygon points="88,55 82,32 97,50" fill="#ffb6c1"/>
+  
+  <!-- Right Ear -->
+  <polygon points="171,60 181,25 156,50" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  <polygon points="168,55 174,32 159,50" fill="#ffb6c1"/>
+  
+  <!-- Eyes (looking slightly right) -->
+  <ellipse cx="112" cy="95" rx="8" ry="10" fill="#333"/>
+  <ellipse cx="148" cy="95" rx="8" ry="10" fill="#333"/>
+  <ellipse cx="114" cy="92" rx="3" ry="4" fill="white"/>
+  <ellipse cx="150" cy="92" rx="3" ry="4" fill="white"/>
+  
+  <!-- Nose -->
+  <ellipse cx="128" cy="110" rx="5" ry="3" fill="#ffb6c1"/>
+  
+  <!-- Mouth (slightly open, excited) -->
+  <path d="M123,114 Q128,122 133,114" stroke="#333" stroke-width="1.5" fill="none"/>
+  
+  <!-- Whiskers -->
+  <line x1="95" y1="108" x2="70" y2="105" stroke="#333" stroke-width="1"/>
+  <line x1="95" y1="112" x2="70" y2="115" stroke="#333" stroke-width="1"/>
+  <line x1="161" y1="108" x2="186" y2="105" stroke="#333" stroke-width="1"/>
+  <line x1="161" y1="112" x2="186" y2="115" stroke="#333" stroke-width="1"/>
+  
+  <!-- Left Paw (up/idle) -->
+  <ellipse cx="80" cy="165" rx="18" ry="12" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  <!-- Paw pads -->
+  <circle cx="74" cy="162" r="3" fill="#ffb6c1"/>
+  <circle cx="82" cy="160" r="3" fill="#ffb6c1"/>
+  <circle cx="88" cy="163" r="3" fill="#ffb6c1"/>
+  
+  <!-- Right Paw (DOWN - pressing key) -->
+  <ellipse cx="171" cy="205" rx="18" ry="12" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  <!-- Paw pads -->
+  <circle cx="165" cy="202" r="3" fill="#ffb6c1"/>
+  <circle cx="173" cy="200" r="3" fill="#ffb6c1"/>
+  <circle cx="181" cy="203" r="3" fill="#ffb6c1"/>
+  <!-- Motion lines -->
+  <line x1="161" y1="190" x2="161" y2="195" stroke="#333" stroke-width="1" opacity="0.5"/>
+  <line x1="171" y1="188" x2="171" y2="193" stroke="#333" stroke-width="1" opacity="0.5"/>
+  <line x1="181" y1="190" x2="181" y2="195" stroke="#333" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Keyboard -->
+  <rect x="85" y="210" rx="3" ry="3" width="86" height="15" fill="#555" stroke="#333" stroke-width="1"/>
+  <rect x="88" y="213" rx="1" ry="1" width="8" height="6" fill="#777"/>
+  <rect x="98" y="213" rx="1" ry="1" width="8" height="6" fill="#777"/>
+  <rect x="108" y="213" rx="1" ry="1" width="8" height="6" fill="#777"/>
+  <rect x="118" y="213" rx="1" ry="1" width="8" height="6" fill="#777"/>
+  <rect x="128" y="213" rx="1" ry="1" width="8" height="6" fill="#777"/>
+  <rect x="138" y="213" rx="1" ry="1" width="8" height="6" fill="#777"/>
+  <!-- Key being pressed (highlight) -->
+  <rect x="148" y="211" rx="1" ry="1" width="8" height="5" fill="#4ade80" opacity="0.8"/>
+  <rect x="158" y="213" rx="1" ry="1" width="10" height="6" fill="#777"/>
+  
+  <!-- Blush (more intense when typing) -->
+  <circle cx="100" cy="108" r="7" fill="#ffb6c1" opacity="0.5"/>
+  <circle cx="156" cy="108" r="7" fill="#ffb6c1" opacity="0.5"/>
+</svg>

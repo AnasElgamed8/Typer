@@ -100,6 +100,7 @@ impl SprintDetector {
     }
 
     /// Force-end the current sprint (e.g., when the user switches modes).
+    #[allow(dead_code)]
     pub fn force_end(&mut self) -> Option<Sprint> {
         if self.is_active && !self.current_chars.is_empty() {
             self.finalize_sprint()
@@ -169,6 +170,7 @@ impl SprintDetector {
     }
 
     /// Is a sprint currently active?
+    #[allow(dead_code)]
     pub fn is_sprint_active(&self) -> bool {
         self.is_active
     }
